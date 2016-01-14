@@ -11,88 +11,86 @@ MYSQL="$(which mysql)"
 DUMP_PATH="/home/methlab/backup/database"
 SCRIPT_PATH="/home/methlab/scripts"
 
-# DO NOT BACKUP these databases
+# List of databases to EXCLUDE from dump
 EXCLUDED="information_schema mysql phpmyadmin performance_schema"
 
 # Get all database list first
 DBS="$($MYSQL -u $DB_USERNAME -h $DB_HOST -p$DB_PASSWORD -Bse 'show databases')"
 
-# nome directory dove salvare
+# Destination directory
 date=$(date +%Y%m%d)
 MyFOLDER=${DUMP_PATH}/${date}
 MyARCHIVE="methlab_database_${date}.zip"
 
 cd ${SCRIPT_PATH}
-echo "[$(date)] operazione export database iniziata"
+echo "[$(date)] Beginning dump operation."
 
-# verifico se la cartella esiste già
+# check if destination directory exists. If not, procede.
 if [ ! -d ${MyFOLDER} ]
 then
-	# verifico se esiste gia un file per questa data. se esiste lo cancello
+	# check archive for current date exists. If it does, delete it...
 	if [ -f ${DUMP_PATH}/${MyARCHIVE} ]
 	then
 		rm ${DUMP_PATH}/${MyARCHIVE}
-		echo "file per la data attuale già esistente: rimosso"
+		echo "file for current date already exists: deleted."
 	fi
 
-	#se non c'è la creo e proseguo
-	echo "creazione directory ${MyFOLDER}..."
+	# ...otherwise, procede.
+	echo "creating directory ${MyFOLDER}... Ok."
 	mkdir -p ${MyFOLDER}
 
-	# per ogni db, creo un file esportazione
+	# for each database, create a dump
 	COUNTER=0
 	for db in $DBS
 	do
 	    skipdb=-1
-	    # verifico se il db è nella lista di quelli da saltare
+	    # check if current db is in ignore list...
 	    if [ "${EXCLUDED}" != "" ];
 	    then
         	for i in ${EXCLUDED}
 	        do
-			#echo " verifica $db - $i"
         		if [ ${db} = ${i} ];
 			then
 				skipdb=1
 			fi
-			#echo " - verifica $db - $i: $skipdb"
 	        done
 	    fi
 	    
-	    # se non lo è, lo esporto
+	    # if not, create dump.
 	    if [ "$skipdb" -eq -1 ];
 	    then
 	        mysqldump -u $DB_USERNAME -h $DB_HOST -p$DB_PASSWORD $db > ${MyFOLDER}/db_${db}.sql
-		echo " - ${db}: Ok."
+		echo " - ${db}: exported."
 		COUNTER=$((COUNTER+1))
 	    else
-		echo " - ${db}: non esportato."
+		echo " - ${db}: skipped."
 	    fi
 	done
-	# se è stato esportato almeno un db
+	# count exported databases
 	if [ "$COUNTER" -gt 0 ];
 	then
-		# zippo la cartella
-		echo "creazione archivio in corso..."
+		# at least one, create a single archive with all dumped db.
+		echo "creating archive..."
 		zip -r ${DUMP_PATH}/${MyARCHIVE} ${MyFOLDER}
-		echo "archiviazione completata"
+		echo "...done"
 	else
-		echo "nessun database da esportare"
+		echo "no database to export."
 		exit 0
 	fi
 
-	# cancello comunque la vecchia cartella
-	echo "pulizia file temporanei in corso..."
+	# delete temporary folder
+	echo "cleaning temp files..."
 	rm -rf ${MyFOLDER}
-	echo "database archiviati: $COUNTER. Operazione completata"
+	echo "archived databases: $COUNTER. Operation completed!"
 
-	# trasferisco su Amazon S3
-	echo "trasferimento file verso Amazon S3 in corso..."
+	# transfer to Amazon S3
+	echo "sending files to Amazon S3 bucket..."
 	aws s3 cp ${DUMP_PATH}/${MyARCHIVE} s3://methlab/database/${MyARCHIVE}
-	echo "trasferimento completato"
+	echo "...done."
  
-	# cancello comunque i file più vecchi di due settimane
+	# delete archives older than 2 weeks
 	find ${DUMP_PATH}/* -mtime +13 -exec rm {} \;
 else
-	echo "directory già ${MyFOLDER} esistente: impossibile continuare";
+	echo "directory ${MyFOLDER} already exists: operation aborted.";
 fi
 echo ""

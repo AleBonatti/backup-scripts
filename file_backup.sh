@@ -21,7 +21,7 @@ fi
 # running backup
 rsync -adz --exclude-from=${SCRIPT_PATH}/exclude-list.txt ${SOURCE} ${BACKUP_PATH}
 
-# zippo la cartella
+# zip directory
 echo "creating zip archive..."
 zip -rq ${ZIP_PATH}/${ARCHIVE} ${BACKUP_PATH}
 #tar -czf ${ZIP_PATH}/${ARCHIVE} ${BACKUP_PATH}
