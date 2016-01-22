@@ -2,14 +2,14 @@
 
 PATH="/usr/local/bin:$PATH"
 DB_HOST="localhost"
-source /home/methlab/scripts/.env
+source /home/your-user/scripts/.env
 
 # Linux bin paths, change this if it can't be autodetected via which command
 MYSQL="$(which mysql)"
 
 # Backup Dest directory, change this if you have someother location
-DUMP_PATH="/home/methlab/backup/database"
-SCRIPT_PATH="/home/methlab/scripts"
+DUMP_PATH="/home/your-user/backup/database"
+SCRIPT_PATH="/home/your-user/scripts"
 
 # List of databases to EXCLUDE from dump
 EXCLUDED="information_schema mysql phpmyadmin performance_schema"
