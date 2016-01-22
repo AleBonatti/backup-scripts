@@ -2,9 +2,9 @@
 
 # folders and paths
 SOURCE="/var/www/html/"
-BACKUP_PATH="/home/methlab/backup/progetti/current/"
-ZIP_PATH="/home/methlab/backup/progetti"
-SCRIPT_PATH="/home/methlab/scripts"
+BACKUP_PATH="/home/your-user/backup/progetti/current/"
+ZIP_PATH="/home/your-user/backup/progetti"
+SCRIPT_PATH="/home/your-user/scripts"
 date=$(date +%Y%m%d)
 ARCHIVE="methlab_progetti_${date}.zip"
 
