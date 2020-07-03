@@ -2,12 +2,13 @@
 
 PATH="/usr/local/bin:$PATH"
 DB_HOST="localhost"
+# this is where your credential are stored
 source /home/your-user/scripts/.env
 
 # Linux bin paths, change this if it can't be autodetected via which command
 MYSQL="$(which mysql)"
 
-# Backup Dest directory, change this if you have someother location
+# Backup destination directory
 DUMP_PATH="/home/your-user/backup/database"
 SCRIPT_PATH="/home/your-user/scripts"
 
@@ -20,7 +21,10 @@ DBS="$($MYSQL -u $DB_USERNAME -h $DB_HOST -p$DB_PASSWORD -Bse 'show databases')"
 # Destination directory
 date=$(date +%Y%m%d)
 MyFOLDER=${DUMP_PATH}/${date}
+# Zip name
 MyARCHIVE="methlab_database_${date}.zip"
+# insert s3 url. ie username/projects/
+PATH_S3="username/projects/"
 
 cd ${SCRIPT_PATH}
 echo "[$(date)] Beginning dump operation."
@@ -85,7 +89,7 @@ then
 
 	# transfer to Amazon S3
 	echo "sending files to Amazon S3 bucket..."
-	aws s3 cp ${DUMP_PATH}/${MyARCHIVE} s3://methlab/database/${MyARCHIVE}
+	aws s3 cp ${DUMP_PATH}/${MyARCHIVE} s3://${PATH_S3}${MyARCHIVE} --storage-class=GLACIER
 	echo "...done."
  
 	# delete archives older than 2 weeks
